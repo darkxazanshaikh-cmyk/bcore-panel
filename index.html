@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hcore Activation Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <span class="logo-icon">&#9889;</span>
+                <h1>Hcore <span class="accent">Activation Panel</span></h1>
+            </div>
+            <div class="server-status" id="serverStatus">
+                <span class="status-dot online"></span>
+                <span>Server: <strong id="statusText">Online</strong></span>
+            </div>
+        </header>
+
+        <!-- GitHub Config (First Time Setup) -->
+        <div class="card setup-card" id="setupCard">
+            <h2>&#9881; First Time Setup</h2>
+            <p>GitHub repo aur token configure karo:</p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>GitHub Username</label>
+                    <input type="text" id="ghUser" placeholder="your-username">
+                </div>
+                <div class="form-group">
+                    <label>Repo Name</label>
+                    <input type="text" id="ghRepo" placeholder="hcore-panel">
+                </div>
+                <div class="form-group">
+                    <label>Branch</label>
+                    <input type="text" id="ghBranch" value="main" placeholder="main">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full">
+                    <label>GitHub Personal Access Token</label>
+                    <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+                    <small>Settings → Developer Settings → Personal Access Tokens → Fine-grained → Contents: Read and Write</small>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveConfig()">Save Config</button>
+            <button class="btn btn-secondary" onclick="testConnection()">Test Connection</button>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="stats-row" id="statsRow" style="display:none;">
+            <div class="stat-card">
+                <div class="stat-number" id="totalKeys">0</div>
+                <div class="stat-label">Total Keys</div>
+            </div>
+            <div class="stat-card active">
+                <div class="stat-number" id="activeKeys">0</div>
+                <div class="stat-label">Active</div>
+            </div>
+            <div class="stat-card expired">
+                <div class="stat-number" id="expiredKeys">0</div>
+                <div class="stat-label">Expired</div>
+            </div>
+            <div class="stat-card disabled">
+                <div class="stat-number" id="disabledKeys">0</div>
+                <div class="stat-label">Disabled</div>
+            </div>
+        </div>
+
+        <!-- Create Key -->
+        <div class="card" id="createCard" style="display:none;">
+            <h2>&#10010; Create New Key</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>License Key</label>
+                    <input type="text" id="newKey" placeholder="Auto-generated if empty">
+                    <button class="btn btn-sm" onclick="generateKey()">Generate</button>
+                </div>
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="datetime-local" id="newExpiry">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Max Devices</label>
+                    <input type="number" id="newMaxDevices" value="1" min="1" max="100">
+                </div>
+                <div class="form-group toggles">
+                    <label><input type="checkbox" id="newFeature1" checked> Feature1 (Daemon)</label>
+                    <label><input type="checkbox" id="newFeature2" checked> Feature2 (Root Hide)</label>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="createKey()">Create Key</button>
+        </div>
+
+        <!-- Server Mode -->
+        <div class="card" id="serverCard" style="display:none;">
+            <h2>&#9881; Server Mode</h2>
+            <div class="mode-buttons">
+                <button class="btn mode-btn active" data-mode="online" onclick="setServerMode('online')">&#9989; Online</button>
+                <button class="btn mode-btn" data-mode="maintenance" onclick="setServerMode('maintenance')">&#9888; Maintenance</button>
+                <button class="btn mode-btn" data-mode="offline" onclick="setServerMode('offline')">&#10060; Offline</button>
+            </div>
+        </div>
+
+        <!-- Keys Table -->
+        <div class="card table-card" id="tableCard" style="display:none;">
+            <h2>&#128203; License Keys</h2>
+            <div class="table-controls">
+                <input type="text" id="searchInput" placeholder="Search keys..." oninput="filterKeys()">
+                <button class="btn btn-danger" onclick="deleteSelected()">Delete Selected</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="keysTable">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll()"></th>
+                            <th>Key</th>
+                            <th>Expiry</th>
+                            <th>F1</th>
+                            <th>F2</th>
+                            <th>Devices</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="keysBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination" id="pagination"></div>
+        </div>
+
+        <!-- Edit Modal -->
+        <div class="modal" id="editModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Edit Key</h3>
+                    <button class="btn-close" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editKeyIndex">
+                    <div class="form-group">
+                        <label>Key</label>
+                        <input type="text" id="editKey" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="datetime-local" id="editExpiry">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Devices</label>
+                        <input type="number" id="editMaxDevices" min="1" max="100">
+                    </div>
+                    <div class="form-group toggles">
+                        <label><input type="checkbox" id="editFeature1"> Feature1 (Daemon)</label>
+                        <label><input type="checkbox" id="editFeature2"> Feature2 (Root Hide)</label>
+                        <label><input type="checkbox" id="editDisabled"> Disabled</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div class="toast" id="toast"></div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Hcore Activation Panel | GitHub Pages + Cloudflare Worker</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

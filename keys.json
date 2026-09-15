@@ -1,0 +1,19 @@
+{
+  "server_mode": "online",
+  "keys": [
+    {
+      "key": "HCORE-DEMO-2026-TEST",
+      "expiry": "2026-12-31 23:59:59",
+      "feature1": 1,
+      "feature2": 1,
+      "disabled": 0,
+      "max_devices": 3,
+      "devices": [],
+      "created_at": "2026-09-16"
+    }
+  ],
+  "settings": {
+    "default_expiry_days": 30,
+    "max_devices_per_key": 1
+  }
+}
